@@ -13,6 +13,7 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -61,6 +62,11 @@ public class MainActivity extends AppCompatActivity {
     private ListView resultListView;
     private ResultListAdapter resultListAdapter;
 
+    //Location
+    private TextView locationA;
+    private TextView locationB;
+    private TextView locationC;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,6 +78,10 @@ public class MainActivity extends AppCompatActivity {
         status = (TextView) findViewById(R.id.status);
 
         resultListView = (ListView)findViewById(R.id.result_list);
+
+        locationA = (TextView) findViewById(R.id.stamp_A);
+        locationB = (TextView) findViewById(R.id.stamp_B);
+        locationC = (TextView) findViewById(R.id.stamp_C);
 
         BluetoothManager mBleManager;
         mBleManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -221,6 +231,8 @@ public class MainActivity extends AppCompatActivity {
             //set list view adapter
             resultListView.setAdapter(resultListAdapter);
             resultListAdapter.notifyDataSetChanged();
+
+            changeLocation();
         }
 
         //check duplication
@@ -236,6 +248,40 @@ public class MainActivity extends AppCompatActivity {
             return -1;
         }
 
+        private void changeLocation() {
+            int minRssiIndex = 0;
+            int minRssi = Math.abs(cbScanResults.get(0).getDeviceRssi());
+
+            for(int i = 1; i < cbScanResults.size(); i++){
+
+                int curRssi = Math.abs(cbScanResults.get(i).getDeviceRssi());
+
+                if(minRssi > curRssi){
+                    minRssiIndex = i;
+                    minRssi = curRssi;
+                }
+            }
+
+            int maxDevice = (cbScanResults.get(minRssiIndex).getDeviceName().charAt(0) - 65);
+
+            switch (maxDevice){
+                case 0:
+                    locationA.setTextColor(Color.parseColor("#ffff0000"));
+                    locationB.setTextColor(Color.parseColor("#000000"));
+                    locationC.setTextColor(Color.parseColor("#000000"));
+                    break;
+                case 1:
+                    locationA.setTextColor(Color.parseColor("#000000"));
+                    locationB.setTextColor(Color.parseColor("#ffff0000"));
+                    locationC.setTextColor(Color.parseColor("#000000"));
+                    break;
+                case 2:
+                    locationA.setTextColor(Color.parseColor("#000000"));
+                    locationB.setTextColor(Color.parseColor("#000000"));
+                    locationC.setTextColor(Color.parseColor("#ffff0000"));
+                    break;
+            }
+        }
     }
 }
 
