@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckedTextView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -44,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isScanning = false;
     // flag for connection
     private boolean isConnected = false;
-    // scan results
+    // scan results for list
     private List<InfoDeviceList> mScanResults;
     // scan callback
     private ScanCallback mScanCallback;
@@ -63,9 +64,9 @@ public class MainActivity extends AppCompatActivity {
     private ResultListAdapter resultListAdapter;
 
     //Location
-    private TextView locationA;
-    private TextView locationB;
-    private TextView locationC;
+    private CheckedTextView locationA;
+    private CheckedTextView locationB;
+    private CheckedTextView locationC;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,9 +80,9 @@ public class MainActivity extends AppCompatActivity {
 
         resultListView = (ListView)findViewById(R.id.result_list);
 
-        locationA = (TextView) findViewById(R.id.stamp_A);
-        locationB = (TextView) findViewById(R.id.stamp_B);
-        locationC = (TextView) findViewById(R.id.stamp_C);
+        locationA = (CheckedTextView) findViewById(R.id.stamp_A);
+        locationB = (CheckedTextView) findViewById(R.id.stamp_B);
+        locationC = (CheckedTextView) findViewById(R.id.stamp_C);
 
         BluetoothManager mBleManager;
         mBleManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -133,12 +134,18 @@ public class MainActivity extends AppCompatActivity {
 
         // setup scan filters
         List<ScanFilter> filters= new ArrayList<>();
-        ScanFilter scanFilter= new ScanFilter.Builder()
+        ScanFilter scanFilter1= new ScanFilter.Builder()
                 .setDeviceAddress(MAC_ADDR1)
+                .build();
+        ScanFilter scanFilter2 = new ScanFilter.Builder()
                 .setDeviceAddress(MAC_ADDR2)
+                .build();
+        ScanFilter scanFilter3 = new ScanFilter.Builder()
                 .setDeviceAddress(MAC_ADDR3)
                 .build();
-        filters.add(scanFilter);
+        filters.add(scanFilter1);
+        filters.add(scanFilter2);
+        filters.add(scanFilter3);
 
         // scan settings
         // set low power scan mode
@@ -152,6 +159,8 @@ public class MainActivity extends AppCompatActivity {
 
         //init listview adapter
         resultListAdapter = new ResultListAdapter(this, mScanResults);
+        //set list view adapter
+        resultListView.setAdapter(resultListAdapter);
 
         //start scan
         mBleScanner = mBleAdapter.getBluetoothLeScanner();
@@ -164,6 +173,14 @@ public class MainActivity extends AppCompatActivity {
     private void stopScan(View v){
         status.setText("Finish Scan");
         mBleScanner.stopScan(mScanCallback);
+
+        locationA.setChecked(false);
+        locationB.setChecked(false);
+        locationC.setChecked(false);
+
+        locationA.setTextColor(Color.parseColor("#000000"));
+        locationB.setTextColor(Color.parseColor("#000000"));
+        locationC.setTextColor(Color.parseColor("#000000"));
     }
 
     // Request BLE enable
@@ -207,6 +224,9 @@ public class MainActivity extends AppCompatActivity {
 
         private void addScanResult(ScanResult result) {
 
+            boolean isUrgent = false;
+            int urgentLevel = 0;
+
             //get scanned device's name
             String deviceName = result.getScanRecord().getDeviceName();
             // get scanned device
@@ -226,10 +246,41 @@ public class MainActivity extends AppCompatActivity {
 
             // log
             Log.d( TAG, "scan results device: " + result.getScanRecord().getDeviceName());
-            status.setText("scanned Device : " + result.getScanRecord().getDeviceName());
+            Log.d(TAG, "scanRecord : " + result.getScanRecord().toString());
+
+            String urgent = new String (result.getScanRecord().getManufacturerSpecificData(12336));
+
+            Log.d(TAG, "df : " + urgent.charAt(0));
+
+            //긴급한 상황인지 확인
+            if(urgent.charAt(0) == '1'){
+                isUrgent = true;
+            }
+
+            Log.d(TAG, "isUrgent : " + isUrgent);
+
+            //get device's name index
+            int deviceNameIndex = (result.getScanRecord().getDeviceName().charAt(0) - 65);
+
+            //긴급한 상황이면 Level 확인
+            if(isUrgent){
+                switch (urgent.charAt(1)){
+                    case '0':
+                        changeColor(deviceNameIndex, "#ffff0000");
+                    break;
+                    case '1':
+                        changeColor(deviceNameIndex, "#FFFF00");
+                        break;
+                    case '2':
+                        changeColor(deviceNameIndex, "#008000");
+                        break;
+                    case '3':
+                        changeColor(deviceNameIndex, "#0000FF");
+                        break;
+                }
+            }
 
             //set list view adapter
-            resultListView.setAdapter(resultListAdapter);
             resultListAdapter.notifyDataSetChanged();
 
             changeLocation();
@@ -246,6 +297,20 @@ public class MainActivity extends AppCompatActivity {
             }
 
             return -1;
+        }
+
+        private void changeColor(int deviceIndex, String inputColor) {
+            switch(deviceIndex){
+                case 0 :
+                    locationA.setTextColor(Color.parseColor(inputColor));
+                    break;
+                case 1 :
+                    locationB.setTextColor(Color.parseColor(inputColor));
+                    break;
+                case 2 :
+                    locationC.setTextColor(Color.parseColor(inputColor));
+                    break;
+            }
         }
 
         private void changeLocation() {
@@ -266,19 +331,19 @@ public class MainActivity extends AppCompatActivity {
 
             switch (maxDevice){
                 case 0:
-                    locationA.setTextColor(Color.parseColor("#ffff0000"));
-                    locationB.setTextColor(Color.parseColor("#000000"));
-                    locationC.setTextColor(Color.parseColor("#000000"));
+                    locationA.setChecked(true);
+                    locationB.setChecked(false);
+                    locationC.setChecked(false);
                     break;
                 case 1:
-                    locationA.setTextColor(Color.parseColor("#000000"));
-                    locationB.setTextColor(Color.parseColor("#ffff0000"));
-                    locationC.setTextColor(Color.parseColor("#000000"));
+                    locationA.setChecked(false);
+                    locationB.setChecked(true);
+                    locationC.setChecked(false);
                     break;
                 case 2:
-                    locationA.setTextColor(Color.parseColor("#000000"));
-                    locationB.setTextColor(Color.parseColor("#000000"));
-                    locationC.setTextColor(Color.parseColor("#ffff0000"));
+                    locationA.setChecked(false);
+                    locationB.setChecked(false);
+                    locationC.setChecked(true);
                     break;
             }
         }
