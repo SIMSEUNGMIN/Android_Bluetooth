@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
+//리스트 뷰에서 사용할 어댑터
 public class ResultListAdapter extends BaseAdapter {
     Context mContext = null;
     LayoutInflater mLayoutInflater = null;
@@ -20,6 +21,9 @@ public class ResultListAdapter extends BaseAdapter {
         mLayoutInflater = LayoutInflater.from(mContext);
     }
 
+    public void setResultList(List<InfoDeviceList> resultList) {
+        this.resultList = resultList;
+    }
 
     @Override
     public int getCount() {
@@ -36,6 +40,7 @@ public class ResultListAdapter extends BaseAdapter {
         return i;
     }
 
+    //listView에 보여질 정보 선택
     @Override
     public View getView(int i, View convertView, ViewGroup viewGroup) {
 
