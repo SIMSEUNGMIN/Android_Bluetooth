@@ -94,15 +94,19 @@ public class BLEActivity extends AppCompatActivity {
 //        mScanResults.add(new InfoDeviceList('H', MAC_ADDR7, -1000, false, 0));
 //        mScanResults.add(new InfoDeviceList('I', MAC_ADDR7, -1000, false, 0));
 
-        mScanResults.add(new InfoDeviceList('A', "00:00:00:00:00:00", -100, true, 2));
-        mScanResults.add(new InfoDeviceList('B', "11:11:11:11:11:11", -100, true, 1));
-        mScanResults.add(new InfoDeviceList('C', "22:22:22:22:22:22", -100, true, 0));
+        mScanResults.add(new InfoDeviceList('A', "00:00:00:00:00:00", -100, true, 1));
+        mScanResults.add(new InfoDeviceList('B', "11:11:11:11:11:11", -100, false, -1));
+        mScanResults.add(new InfoDeviceList('C', "22:22:22:22:22:22", -100, false, -1));
         mScanResults.add(new InfoDeviceList('D', "33:33:33:33:33:33", -100, true, 2));
-        mScanResults.add(new InfoDeviceList('E', "44:44:44:44:44:44", -100, true, 2));
-        mScanResults.add(new InfoDeviceList('F', "55:55:55:55:55:55", -50, true, 1));
-        mScanResults.add(new InfoDeviceList('G', "66:66:66:66:66:66", -100, true, 2));
-        mScanResults.add(new InfoDeviceList('H', "77:77:77:77:77:77", -100, true, 2));
-        mScanResults.add(new InfoDeviceList('I', "88:88:88:88:88:88", -100, true, 2));
+        mScanResults.add(new InfoDeviceList('E', "44:44:44:44:44:44", -100, false, -1));
+        mScanResults.add(new InfoDeviceList('F', "55:55:55:55:55:55", -100, false, -1));
+        mScanResults.add(new InfoDeviceList('G', "66:66:66:66:66:66", -100, false, -1));
+        mScanResults.add(new InfoDeviceList('H', "77:77:77:77:77:77", -50, false, -1));
+        mScanResults.add(new InfoDeviceList('I', "88:88:88:88:88:88", -100, true, 1));
+        mScanResults.add(new InfoDeviceList('J', "99:99:99:99:99:99", -100, false, -1));
+        mScanResults.add(new InfoDeviceList('K', "10:10:10:10:10:10", -100, true, 2));
+        mScanResults.add(new InfoDeviceList('L', "11:11:11:11:11:11", -100, true, 1));
+
     }
 
     //자식 클래스에서 스캔 결과를 가져갈 수 있도록 반환하는 함수
@@ -265,13 +269,38 @@ public class BLEActivity extends AppCompatActivity {
 
             //update the mScanResults (리스트의 값을 업데이트)
             //리스트를 돌면서 입력된 스캔 정보의 맥 주소와 리스트의 맥 주소가 맞다면 정보를 업데이트
+            //리스트를 돌면서 입력된 스캔 정보의 맥 주소와 리스트의 맥 주소가 맞는지 확인
+            //맞다면 스캔 정보의 isUrgent와 urgentLevel 비교
+            
+            /*
+            1. 만약 현재 정보의 isUrgent == false이고 스캔 정보의 isUrgent == true 라면
+                리스트의 정보를 스캔 정보로 업데이트
+                
+            2. 만약 현재 정보의 isUrgent == true이고 스캔 정보의 isUrgent == true 라면
+                현재 정보의 urgentLevel 과 스캔 정보의 urgentLevel을 비교 후 더 최악으로 결정 (값이 낮은 쪽이 더 최악)
+                
+            3. 만약 현재 정보의 isUrgent == false이고 스캔 정보의 isUrgent == false 라면 
+                그냥 그대로 두기 (or 그냥 업데이트 = 1번 경우)
+             */
+            
             //맞지 않을 경우에는 그냥 넘김
             for(int i = 0; i < mScanResults.size(); i++){
                 InfoDeviceList cur = mScanResults.get(i);
                 if(cur.getDeviceMac().equals(deviceMac)){
                     cur.setDeviceRssi(deviceRssi);
-                    cur.setUrgent(isUrgent);
-                    cur.setUrgentLevel(urgentLevel);
+                    
+                    if(cur.getUrgent()){ //2번 경우
+                        if(cur.getUrgentLevel() > urgentLevel){
+                            cur.setUrgentLevel(urgentLevel);
+                        }
+                    }
+                    else{ //1번, 3번 경우
+                        if(isUrgent) {
+//                            cur.setUrgent(isUrgent);
+                            cur.setUrgent(true);
+                            cur.setUrgentLevel(urgentLevel);
+                        }
+                    }
                 }
             }
         }
