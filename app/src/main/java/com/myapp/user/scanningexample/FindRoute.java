@@ -7,7 +7,8 @@ public class FindRoute {
     private static final int INF = Integer.MAX_VALUE;
     private static List<InfoDeviceList> deviceLists;
 
-    private static int number = 12;
+    private static int allNodeNum = 15;
+    private static int exitNodeNum = 3;
 
     private static int[][] weights;
 
@@ -24,7 +25,9 @@ public class FindRoute {
     }
 
     public Stack start(){
-        initVariable(); //변수 초기화
+        initVariable(); //그래프 및 변수 초기화
+
+        updateGraph(); //그래프 업데이트
 
         System.out.println("현재 위치 : " + findCurLocation());
 
@@ -40,7 +43,7 @@ public class FindRoute {
         int bestRoute = Integer.MAX_VALUE;
         int bestIndex = 0;
 
-        for(int i = number-3; i < number; i++){
+        for(int i = allNodeNum - exitNodeNum; i < allNodeNum; i++){
             if(bestRoute > distance[i]){
                 bestRoute = distance[i];
                 bestIndex = i;
@@ -68,7 +71,7 @@ public class FindRoute {
 
     //출발 지점으로부터 모든 노드까지의 거리값을 구하는 함수 (다익스트라 사용)
     private static void findShortestPath(int curLocation) {
-        for(int i = 0; i < number; i++){
+        for(int i = 0; i < allNodeNum; i++){
             distance[i] = weights[curLocation][i]; //cur에서의 모든 거리값을 담아줌
             prev[i] = curLocation; //이전 노드 값 초기화
         }
@@ -77,14 +80,15 @@ public class FindRoute {
 
         visited[curLocation] = true;
 
-        for(int i = 0; i < number-1; i++){
+        for(int i = 0; i < allNodeNum -1; i++){
             //가장 작은 distance 값을 가진 노드 찾기
             int smallIndex = findSmallIndex();
             visited[smallIndex] = true;
 
-            for(int j = 0; j < number; j++){
+            for(int j = 0; j < allNodeNum; j++){
                 if(!visited[j] && weights[smallIndex][j] != INF){
                     if(distance[j] > distance[smallIndex] + weights[smallIndex][j]){
+                        //새로 찾은 길이 가중치가 더 작다면 새로 찾은 길로 변경
                         distance[j] = distance[smallIndex] + weights[smallIndex][j];
                         prev[j] = smallIndex;
                     }
@@ -96,7 +100,7 @@ public class FindRoute {
     //가장 작은 거리 값을 가지는 노드를 선택하는 함수
     private static int findSmallIndex() {
         int min = Integer.MAX_VALUE;
-        int minIndex = -1;
+        int minIndex = 0;
 
         for(int i = 0; i < distance.length; i++){
             if(!visited[i] && distance[i] != 0){
@@ -128,64 +132,64 @@ public class FindRoute {
     //그래프 및 배열 초기화
     private static void initVariable() {
         initWeight();
-        visited = new boolean[number];
-        distance = new int[number];
-        prev = new int[number];
+        visited = new boolean[allNodeNum];
+        distance = new int[allNodeNum];
+        prev = new int[allNodeNum];
     }
 
     //그래프 초기화
     private static void initWeight() {
         //가중치 초기 값 -> 자기 자신(0), 비상구와 연결(1), 비상구와 한 칸 차이(2), 그외의 연결(3), 연결X(INF)
         //-> 지도 자체에서 연결된 간선들만을 기준으로 함 (비콘에서 수집되는 urgent값 포함 X)
-        weights =
-                new int[][]{
-                        {0, 2, INF, 2, 2, INF, INF, INF, INF, 1, INF, INF},
-                        {2, 0, 2, 3, 3, 3, INF, INF, INF, INF, INF, INF},
-                        {INF, 2, 0, INF, 2, 2, INF, INF, INF, INF, 1, INF},
-                        {2, 3, INF, 0, 3, INF, 3, 2, INF, INF, INF, INF},
-                        {2, 3, 2, 3, 0, 3, 3, 2, 3, INF, INF, INF},
-                        {INF, 3, 2, INF, 3, 0, INF, 2, 3, INF, INF, INF},
-                        {INF, INF, INF, 3, 3, INF, 0, 2, INF, INF, INF, INF},
-                        {INF, INF, INF, 2, 2, 2, 2, 0, 2, INF, INF, 1},
-                        {INF, INF, INF, INF, 3, 3, INF, 2, 0, INF, INF, INF},
-                        {1, INF, INF, INF, INF, INF, INF, INF, INF, 0, INF, INF},
-                        {INF, INF, 1, INF, INF, INF, INF, INF, INF, INF, 0, INF},
-                        {INF, INF, INF, INF, INF, INF, INF, 1, INF, INF, INF, 0}
+        int[][] weights =
+                {
+                        //A, B, C, D, E, F, G, H, I, J, K, L, M, N, O
+                        {0, 3, INF, 10, INF, INF, INF, INF, INF, INF, INF, INF, INF, INF, INF}, //A
+                        {3, 0, 5, INF, 12, INF, INF, INF, INF, INF, INF, INF, INF, INF, INF}, //B
+                        {INF, 5, 0, INF, INF, 15, INF, INF, INF, INF, INF, INF, 10, INF, INF}, //C
+                        {10, INF, INF, 0, 3, INF, 7, 7, INF, INF, INF, INF, INF, INF, INF}, //D
+                        {INF, 12, INF, 3, 0, 5, INF, INF, INF, INF, INF, INF, INF, INF, INF}, //E
+                        {INF, INF, 15, INF, 5, 0, 7, INF, INF, 7, 10, INF, INF, INF, INF}, //F
+                        {INF, INF, INF, 7, INF, 7, 0, 7, 2, 7, INF, INF, INF, INF, INF}, //G
+                        {INF, INF, INF, 7, INF, INF, 7, 0, 5, INF, INF, INF, INF, INF, INF}, //H
+                        {INF, INF, INF, INF, INF, INF, 2, 5, 0, 4, INF, INF, INF, 5, INF}, //I
+                        {INF, INF, INF, INF, INF, 7, 7, INF, 4, 0, INF, 20, INF, INF, INF}, //J
+                        {INF, INF, INF, INF, INF, 10, INF, INF, INF, INF, 0, 5, INF, INF, INF}, //K
+                        {INF, INF, INF, INF, INF, INF, INF, INF, INF, 20, 5, 0, INF, INF, 5}, //L
+                        {INF, INF, 10, INF, INF, INF, INF, INF, INF, INF, INF, INF, 0, INF, INF}, //M
+                        {INF, INF, INF, INF, INF, INF, INF, INF, 5, INF, INF, INF, INF, 0, INF}, //N
+                        {INF, INF, INF, INF, INF, INF, INF, INF, INF, INF, INF, 5, INF, INF, 0} //O
                 };
+    }
 
-        //수집된 스캔 정보를 살펴보면서 urgent = true일 경우
-        //레벨에 따라 해당 간선에 weight 값 추가
-        // (위급할 수록 weight 값을 증가시켜 그 길로 가지 못하게 함)
+    //위급 레벨에 따른 가중치 설정으로 그래프를 업데이트
+    private static void updateGraph() {
         for(int i = 0; i < deviceLists.size(); i++){
             InfoDeviceList cur = deviceLists.get(i);
             int weight = 0;
+            int nodeNum = allNodeNum - exitNodeNum;
 
+            //수집된 스캔 정보를 살펴보면서 getUrgent == true일 경우
+            //레벨에 따라 가중치 선정 공식 적용
+            //가중치 선정 공식 : 기준값(100) + (신호를 받는 노드 개수 -urgentLevel -1) * 레벨별 추가할 값(20)
+            //공식을 사용해 나온 가중치로 그래프의 edge를 추가 업데이트
             if(cur.getUrgent()){
-                switch(cur.getUrgentLevel()){
-                    case 0:
-                        weight = 4;
-                        break;
-                    case 1:
-                        weight = 2;
-                        break;
-                    default:
-                        weight = 0;
-                        break;
-                }
+                weight = 100 + (nodeNum - cur.getUrgentLevel() - 1) * 20;
             }
 
             if(weight != 0){
-                updateWeight(i, weight); //현재 위치의 붙어있는 edge에 weight 추가
+                updateDstWeight(i, weight);
             }
         }
     }
 
-    //그래프의 weight를 증가시키는 함수
-    private static void updateWeight(int cur, int weight) {
+
+    //목적지로 향하는 edge의 가중치 값만 증가
+    private static void updateDstWeight(int cur, int weight) {
         //무방향 그래프이기 때문에 그래프 배열에서 서로의 반대방향에 대한 weight도 같이 증가
         for(int i = 0; i < weights[cur].length; i++){
             if(weights[cur][i] != INF){
-                weights[cur][i] += weight;
+//                weights[cur][i] += weight;
                 weights[i][cur] += weight;
             }
         }
