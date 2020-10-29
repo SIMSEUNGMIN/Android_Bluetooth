@@ -271,24 +271,24 @@ public class BLEActivity extends AppCompatActivity {
             //리스트를 돌면서 입력된 스캔 정보의 맥 주소와 리스트의 맥 주소가 맞다면 정보를 업데이트
             //리스트를 돌면서 입력된 스캔 정보의 맥 주소와 리스트의 맥 주소가 맞는지 확인
             //맞다면 스캔 정보의 isUrgent와 urgentLevel 비교
-            
+
             /*
             1. 만약 현재 정보의 isUrgent == false이고 스캔 정보의 isUrgent == true 라면
                 리스트의 정보를 스캔 정보로 업데이트
-                
+
             2. 만약 현재 정보의 isUrgent == true이고 스캔 정보의 isUrgent == true 라면
                 현재 정보의 urgentLevel 과 스캔 정보의 urgentLevel을 비교 후 더 최악으로 결정 (값이 낮은 쪽이 더 최악)
-                
-            3. 만약 현재 정보의 isUrgent == false이고 스캔 정보의 isUrgent == false 라면 
+
+            3. 만약 현재 정보의 isUrgent == false이고 스캔 정보의 isUrgent == false 라면
                 그냥 그대로 두기 (or 그냥 업데이트 = 1번 경우)
              */
-            
+
             //맞지 않을 경우에는 그냥 넘김
             for(int i = 0; i < mScanResults.size(); i++){
                 InfoDeviceList cur = mScanResults.get(i);
                 if(cur.getDeviceMac().equals(deviceMac)){
                     cur.setDeviceRssi(deviceRssi);
-                    
+
                     if(cur.getUrgent()){ //2번 경우
                         if(cur.getUrgentLevel() > urgentLevel){
                             cur.setUrgentLevel(urgentLevel);

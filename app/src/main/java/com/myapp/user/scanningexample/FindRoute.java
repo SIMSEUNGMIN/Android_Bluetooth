@@ -141,8 +141,8 @@ public class FindRoute {
     private static void initWeight() {
         //가중치 초기 값 -> 자기 자신(0), 비상구와 연결(1), 비상구와 한 칸 차이(2), 그외의 연결(3), 연결X(INF)
         //-> 지도 자체에서 연결된 간선들만을 기준으로 함 (비콘에서 수집되는 urgent값 포함 X)
-        int[][] weights =
-                {
+        weights =
+                new int[][]{
                         //A, B, C, D, E, F, G, H, I, J, K, L, M, N, O
                         {0, 3, INF, 10, INF, INF, INF, INF, INF, INF, INF, INF, INF, INF, INF}, //A
                         {3, 0, 5, INF, 12, INF, INF, INF, INF, INF, INF, INF, INF, INF, INF}, //B

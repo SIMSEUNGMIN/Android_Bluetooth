@@ -1,10 +1,14 @@
 package com.myapp.user.scanningexample;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -48,9 +52,17 @@ public class RouteActivity extends AppCompatActivity {
         //비콘이 위치할 지점을 저장해둔 List
         private List<Point> points;
 
+        //화면의 전체 크기
+        private int canvasWidth;
+        private int canvasHeight;
+
         //화면 한 칸의 크기
         private float cellX;
         private float cellY;
+
+        //이미지 크기
+        private int imageWidth;
+        private int imageHeight;
 
         //Paint
         private Paint paint;
@@ -61,18 +73,36 @@ public class RouteActivity extends AppCompatActivity {
         }
 
         public void onDraw(Canvas canvas){
-
             //화면의 전체 크기를 따옴
-            int canvasWidth = canvas.getWidth();
-            int canvasHeight = canvas.getHeight();
+            canvasWidth = canvas.getWidth();
+            canvasHeight = canvas.getHeight();
 
-            //3*3 크기를 만들기 위해 화면을 나눔
-            cellX = canvasWidth/10;
-            cellY = canvasHeight/12;
+            //지도 위에 비콘을 표시하기 위해 화면을 나눔
+//            cellX = canvasWidth/35;
+//            cellY = canvasHeight/20;
 
             points = new ArrayList<>();
 
             paint = new Paint();
+
+            //배경 들고오기
+            Resources res =  getResources();
+            BitmapDrawable bd = (BitmapDrawable) res.getDrawable(R.drawable.third_map_gray, null);
+            Bitmap bit = bd.getBitmap();
+
+            imageWidth = (int) (bit.getWidth() * 1.4);
+            imageHeight = (int) (bit.getHeight() * 1.4);
+
+            cellX = imageWidth/35;
+            cellY = imageHeight/20;
+
+            //배경 그리기
+//            canvas.drawBitmap(bit, null, new Rect(0 ,0, canvasWidth, canvasHeight), null);
+
+            //좌우 같은 여백을 주고 그림을 넣기 위해 설정
+            canvas.drawBitmap(bit, null,
+                    new Rect((int)((canvasWidth-imageWidth)/2) ,(int)((canvasHeight-imageHeight)/2), canvasWidth-(int)((canvasWidth-imageWidth)/2), canvasHeight-(int)((canvasHeight-imageHeight)/2)), null);
+//            canvas.drawBitmap(bit, 0, 0, paint);
 
             //지점 초기화
             initPoints();
@@ -112,26 +142,30 @@ public class RouteActivity extends AppCompatActivity {
 
                 //비상구로 도달하는 지점에서 화살표 표시를 그리기 위한 부분
                 if(i == pathSize-2){
+                    paint.setStyle(Paint.Style.FILL);
+                    Path path = new Path();
+
                     //하단의 비상구
-                    if(next == 11){
-                        paint.setStyle(Paint.Style.FILL);
-
-                        Path path = new Path();
-                        path.moveTo(end.getCoordinateX(), end.getCoordinateY()+(cellY/7));
-                        path.lineTo(end.getCoordinateX()-(cellX/2), end.getCoordinateY()-(cellY/2));
-                        path.lineTo(end.getCoordinateX()+(cellX/2), end.getCoordinateY()-(cellY/2));
-                        canvas.drawPath(path, paint);
+                    switch(next){
+                        case 12:
+                            path.moveTo(end.getCoordinateX(), end.getCoordinateY()-(cellY/3));
+                            path.lineTo(end.getCoordinateX()-(cellX/2), end.getCoordinateY()+(cellY/3));
+                            path.lineTo(end.getCoordinateX()+(cellX), end.getCoordinateY()+(cellY/4));
+                            break;
+                        case 13:
+                            path.moveTo(end.getCoordinateX(), end.getCoordinateY()+(cellY/7));
+                            path.lineTo(end.getCoordinateX()-(cellX/2), end.getCoordinateY()-(cellY/2));
+                            path.lineTo(end.getCoordinateX()+(cellX/2), end.getCoordinateY()-(cellY/2));
+                            break;
+                        case 14:
+                            path.moveTo(end.getCoordinateX()+(cellX/7), end.getCoordinateY());
+                            path.lineTo(end.getCoordinateX()-(cellX/2), end.getCoordinateY()-(cellY/2));
+                            path.lineTo(end.getCoordinateX()-(cellX/2), end.getCoordinateY()+(cellY/2));
+                            break;
                     }
-                    //상단의 비상구
-                    else{
-                        paint.setStyle(Paint.Style.FILL);
 
-                        Path path = new Path();
-                        path.moveTo(end.getCoordinateX(), end.getCoordinateY()-(cellY/7));
-                        path.lineTo(end.getCoordinateX()-(cellX/2), end.getCoordinateY()+(cellY/2));
-                        path.lineTo(end.getCoordinateX()+(cellX/2), end.getCoordinateY()+(cellY/2));
-                        canvas.drawPath(path, paint);
-                    }
+                    canvas.drawPath(path, paint);
+
                 }
 
                 cur = next;
@@ -142,20 +176,21 @@ public class RouteActivity extends AppCompatActivity {
         private void printBluetoothPoint(Canvas canvas) {
             //비상구를 제외한 나머지 점들을 스캔 결과 리스트의 urgentLevel에 따라
             //색을 입혀 그림
+
             for(int i = 0; i < points.size()-3; i++){
                 paint.setColor(selectColor(i));
                 paint.setStyle(Paint.Style.FILL);
                 Point cur = points.get(i);
-                canvas.drawCircle(cur.getCoordinateX(), cur.getCoordinateY(), 50, paint);
+                canvas.drawCircle(cur.getCoordinateX(), cur.getCoordinateY(), 30, paint);
                 paint.setColor(Color.BLACK);
                 paint.setStyle(Paint.Style.STROKE);
                 paint.setStrokeWidth(5);
-                canvas.drawCircle(cur.getCoordinateX(), cur.getCoordinateY(), 50, paint);
+                canvas.drawCircle(cur.getCoordinateX(), cur.getCoordinateY(), 30, paint);
             }
         }
 
         //스캔 결과 리스트의 UrgentLevel에 따라 색을 선정하는 함수
-        //if level = 0, red. if level = 1, Yellow. if level = 2 (default) or not urgent, green.
+        //if level = 0, red. if level = 1, Magenta. if level = 2, Yellow, if level = 3 (default) or not urgent, green.
         private int selectColor(int i) {
             InfoDeviceList cur = devicesList.get(i);
 
@@ -164,6 +199,8 @@ public class RouteActivity extends AppCompatActivity {
                     case 0:
                         return Color.RED;
                     case 1:
+                        return Color.MAGENTA;
+                    case 2:
                         return Color.YELLOW;
                     default:
                         return Color.GREEN;
@@ -172,39 +209,50 @@ public class RouteActivity extends AppCompatActivity {
             else return Color.GREEN;
         }
 
-        //9개의 비콘 지점을 설정(항상 같은 위치에 존재할 수 있도록)
+        //비콘 지점을 설정(비상구 포함) -> 중심 지점
         private void initPoints() {
-            points.add(new Point(cellX*2, cellY*3));
-            points.add(new Point(cellX*5, cellY*3));
-            points.add(new Point(cellX*8, cellY*3));
-            points.add(new Point(cellX*2, cellY*6));
-            points.add(new Point(cellX*5, cellY*6));
-            points.add(new Point(cellX*8, cellY*6));
-            points.add(new Point(cellX*2, cellY*9));
-            points.add(new Point(cellX*5, cellY*9));
-            points.add(new Point(cellX*8, cellY*9));
-            points.add(new Point(cellX*2, cellY*1));
-            points.add(new Point(cellX*8, cellY*1));
-            points.add(new Point(cellX*5, cellY*11));
+            float whiteSpaceWidth = ((canvasWidth-imageWidth)/2);
+            float whiteSpaceHeight = ((canvasHeight-imageHeight)/2);
+
+            points.add(new Point(whiteSpaceWidth + (float)(cellX*5.6), whiteSpaceHeight + cellY*8)); //A
+            points.add(new Point(whiteSpaceWidth + (float)(cellX*8.5), whiteSpaceHeight + cellY*7)); //B
+            points.add(new Point(whiteSpaceWidth + cellX*12, whiteSpaceHeight + (float)(cellY*5.8))); //C
+            points.add(new Point(whiteSpaceWidth + (float)(cellX*8.5), whiteSpaceHeight + (float)(cellY*11.5))); //D
+            points.add(new Point(whiteSpaceWidth + (float)(cellX*11.5), whiteSpaceHeight + (float)(cellY*11.5))); //E
+            points.add(new Point(whiteSpaceWidth + (float)(cellX*16.3), whiteSpaceHeight + (float)(cellY*11.5))); //F
+            points.add(new Point(whiteSpaceWidth + (float)(cellX*12.7), whiteSpaceHeight + (float)(cellY*13.5))); //G
+            points.add(new Point(whiteSpaceWidth + (float)(cellX*8.5), whiteSpaceHeight + (float)(cellY*15.2))); //H
+            points.add(new Point(whiteSpaceWidth + (float)(cellX*12.7), whiteSpaceHeight + (float)(cellY*15.2))); //I
+            points.add(new Point(whiteSpaceWidth + cellX*16, whiteSpaceHeight + (float)(cellY*15.2))); //J
+            points.add(new Point(whiteSpaceWidth + (float)(cellX*26.5), whiteSpaceHeight + (float)(cellY*11.5))); //K
+            points.add(new Point(whiteSpaceWidth + (float)(cellX*26.5), whiteSpaceHeight + (float)(cellY*15.2))); //L
+
+            //비상구
+            points.add(new Point(whiteSpaceWidth + cellX*10, whiteSpaceHeight + cellY*3)); //M
+            points.add(new Point(whiteSpaceWidth + (float)(cellX*12.5), whiteSpaceHeight + cellY*18)); //N
+            points.add(new Point(whiteSpaceWidth + cellX*31, whiteSpaceHeight + (float)(cellY*15.2))); //O
         }
 
         //비상구 그리는 함수
         private void printEmergencyExit(Canvas canvas) {
+            float whiteSpaceWidth = ((canvasWidth-imageWidth)/2);
+            float whiteSpaceHeight = ((canvasHeight-imageHeight)/2);
+
             paint.setColor(Color.GRAY);
 
-            //순서대로 우측 상단, 좌측 상단, 하단의 가운데
-            canvas.drawRect(cellX, (float) 0.0, (cellX*3), cellY, paint);
-            canvas.drawRect((cellX*7), (float)0.0, (cellX*9), cellY, paint);
-            canvas.drawRect((cellX*4), (cellY*11), (cellX*6), (cellY*12), paint);
+            //사각형 그리기
+            canvas.drawRect(whiteSpaceWidth + (float)(cellX*8.5), whiteSpaceHeight + (float)(cellY*2.6), whiteSpaceWidth + (float)(cellX*11.5), whiteSpaceHeight +(float)(cellY*3.5), paint); //M
+            canvas.drawRect(whiteSpaceWidth + (float)(cellX*11.7), whiteSpaceHeight + (float)(cellY*17.6), whiteSpaceWidth + (float)(cellX*13.7), whiteSpaceHeight + (float)(cellY*18.5), paint); //N
+            canvas.drawRect(whiteSpaceWidth + (float)(cellX*30.5), whiteSpaceHeight + (float)(cellY*14.2), whiteSpaceWidth + (float)(cellX*31.5), whiteSpaceHeight + (float)(cellY*16.2), paint); //O
 
             paint.setColor(Color.BLACK);
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(7);
 
             //테두리
-            canvas.drawRect(cellX, (float) 0.0, (cellX*3), cellY, paint);
-            canvas.drawRect((cellX*7), (float)0.0, (cellX*9), cellY, paint);
-            canvas.drawRect((cellX*4), (cellY*11), (cellX*6), (cellY*12), paint);
+            canvas.drawRect(whiteSpaceWidth + (float)(cellX*8.5), whiteSpaceHeight + (float)(cellY*2.6), whiteSpaceWidth + (float)(cellX*11.5), whiteSpaceHeight +(float)(cellY*3.5), paint); //M
+            canvas.drawRect(whiteSpaceWidth + (float)(cellX*11.7), whiteSpaceHeight + (float)(cellY*17.6), whiteSpaceWidth + (float)(cellX*13.7), whiteSpaceHeight + (float)(cellY*18.5), paint); //N
+            canvas.drawRect(whiteSpaceWidth + (float)(cellX*30.5), whiteSpaceHeight + (float)(cellY*14.2), whiteSpaceWidth + (float)(cellX*31.5), whiteSpaceHeight + (float)(cellY*16.2), paint); //O
         }
     }
 }
